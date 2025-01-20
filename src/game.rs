@@ -1,6 +1,6 @@
 use macroquad::prelude::*;
 
-use crate::map::MapWorldData;
+use crate::map::{MapWorldData, TileObject};
 
 pub struct GameState {
     pub map_data: Option<MapWorldData>,
@@ -23,12 +23,19 @@ impl GameState {
             return;
         }
 
-        let tiles = &mut self.map_data.as_mut().unwrap().tiles;
-        let tile = tiles.get_mut(
-            self.player_pos.y.round() as usize,
-            self.player_pos.x.round() as usize,
-        );
+        let x = self.player_pos.x.round() as usize;
+        let y = self.player_pos.y.round() as usize;
 
-        tile.on_hoe();
+        let tile_objects = &mut self.map_data.as_mut().unwrap().objects;
+        let tile_object = tile_objects.get_mut(y, x);
+
+        tile_object.to_owned().on_axe(self);
+
+        let tiles = &mut self.map_data.as_mut().unwrap().tiles;
+        let tile = tiles.get_mut(y, x);
+
+        // tile.on_hoe();
     }
+
+    pub fn on_axe(&mut self, tile_object: &mut TileObject) {}
 }

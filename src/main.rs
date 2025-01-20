@@ -6,15 +6,18 @@ use render::RenderState;
 mod game;
 mod grid;
 mod input;
+mod item;
 mod map;
 mod render;
+mod world;
 
 #[macroquad::main("Stardew Valley")]
 async fn main() {
     let mut game_state = GameState::init();
     let mut renderer = RenderState::init();
-    renderer.load_player_texture().await;
     map::load_map(map::MapType::Farm, &mut game_state, &mut renderer).await;
+    renderer.load_player_texture().await;
+    renderer.load_tile_object_textures().await;
     build_textures_atlas();
 
     loop {

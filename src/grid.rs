@@ -12,8 +12,12 @@ impl<T: Default + Clone> Grid<T> {
 }
 
 impl<T> Grid<T> {
-    pub fn set(&mut self, value: T, row: usize, col: usize) {
+    pub fn set(&mut self, row: usize, col: usize, value: T) {
         self.arr[row * self.cols + col] = value;
+    }
+
+    pub fn get(&self, row: usize, col: usize) -> &T {
+        &self.arr[row * self.cols + col]
     }
 
     pub fn get_mut(&mut self, row: usize, col: usize) -> &mut T {

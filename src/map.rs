@@ -1,8 +1,13 @@
-use std::collections::HashMap;
+use std::collections::{BinaryHeap, HashMap};
 
 use macroquad::prelude::*;
 
-use crate::{game::GameState, grid::Grid, render::RenderState};
+use crate::{
+    game::GameState,
+    grid::Grid,
+    item::{Item, ItemStack, WorldItem},
+    render::RenderState,
+};
 
 pub enum MapType {
     Farm,
@@ -20,6 +25,8 @@ pub type TextureMap = HashMap<String, HashMap<u32, Texture2D>>;
 
 pub struct MapWorldData {
     pub tiles: Grid<Tile>,
+    pub objects: Grid<TileObject>,
+    pub world_items: BinaryHeap<WorldItem>,
 }
 
 impl MapWorldData {
@@ -36,7 +43,7 @@ impl MapWorldData {
                             .and_then(|tile| tile.get_tile())
                         {
                             if let Some(tile) = Tile::from_tiled_tile(&tile) {
-                                grid.set(tile, row, col);
+                                grid.set(row, col, tile);
                             } else {
                                 panic!("Tile at {row},{col} had no or invalid properties");
                             }
@@ -46,7 +53,13 @@ impl MapWorldData {
             }
         }
 
-        MapWorldData { tiles: grid }
+        let grid_objects = Grid::new(tiled_map.height as usize, tiled_map.width as usize);
+
+        MapWorldData {
+            tiles: grid,
+            objects: grid_objects,
+            world_items: BinaryHeap::new(),
+        }
     }
 }
 
@@ -116,20 +129,11 @@ impl Tile {
         }
     }
 
-    pub fn is_tillable(&self) -> bool {
-        match self {
-            Tile::DIRT { is_tilled: false } => true,
-            _ => false,
-        }
-    }
-
     // Actions
     pub fn on_hoe(&mut self) {
-        if self.is_tillable() {
-            match self {
-                Tile::DIRT { is_tilled } => *is_tilled = true,
-                _ => (),
-            }
+        match self {
+            Tile::DIRT { is_tilled } => *is_tilled = true,
+            _ => (),
         }
     }
 }
@@ -140,4 +144,43 @@ fn get_tile_from_id(tile_id: &str) -> Option<Tile> {
         "farm_dirt" => Tile::DIRT { is_tilled: false },
         _ => return None,
     })
+}
+
+#[derive(Default, Clone)]
+pub enum TileObject {
+    #[default]
+    EMPTY,
+    TREE {
+        hp: u32,
+    },
+}
+
+impl TileObject {
+    pub fn get_drops(&self) -> Vec<ItemStack> {
+        match self {
+            TileObject::TREE { .. } => vec![ItemStack {
+                item: Item::Wood,
+                count: 5,
+            }],
+            _ => vec![],
+        }
+    }
+
+    // Actions
+    pub fn on_axe(mut self, game_state: &mut GameState) {
+        match self {
+            TileObject::TREE { mut hp } => {
+                if hp > 0 {
+                    hp -= 1
+                } else {
+                    self.on_destroy(game_state);
+                }
+            }
+            _ => (),
+        }
+    }
+
+    pub fn on_destroy(&mut self, game_state: &mut GameState) {
+        *self = TileObject::EMPTY;
+    }
 }

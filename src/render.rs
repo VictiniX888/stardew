@@ -1,8 +1,10 @@
+use std::collections::HashMap;
+
 use macroquad::prelude::*;
 
 use crate::{
     game::GameState,
-    map::{MapRenderData, TextureMap, Tile},
+    map::{MapRenderData, TextureMap, Tile, TileObject},
 };
 
 pub struct RenderState {
@@ -69,6 +71,21 @@ impl RenderState {
         tex.set_filter(FilterMode::Nearest);
         self.player_texture = Some(tex);
     }
+
+    pub async fn load_tile_object_textures(&mut self) {
+        assert!(self.map_data.is_some());
+
+        let mut obj_texs = HashMap::new();
+        let tex = load_texture("tiled/tiles/farm_tree.png").await.unwrap();
+        tex.set_filter(FilterMode::Nearest);
+        obj_texs.insert(0, tex);
+
+        self.map_data
+            .as_mut()
+            .unwrap()
+            .texturemap
+            .insert("objects".to_string(), obj_texs);
+    }
 }
 
 fn get_tile_texture<'a>(tile: &Tile, texturemap: &'a TextureMap) -> &'a Texture2D {
@@ -78,4 +95,14 @@ fn get_tile_texture<'a>(tile: &Tile, texturemap: &'a TextureMap) -> &'a Texture2
         Tile::DIRT { is_tilled: true } => texturemap.get("farm").unwrap().get(&2).unwrap(),
         _ => panic!("No valid texture for tile"),
     }
+}
+
+fn get_tile_object_texture<'a>(
+    tile_object: &TileObject,
+    texturemap: &'a TextureMap,
+) -> Option<&'a Texture2D> {
+    Some(match tile_object {
+        TileObject::TREE { .. } => texturemap.get("objects").unwrap().get(&0).unwrap(),
+        _ => return None,
+    })
 }
