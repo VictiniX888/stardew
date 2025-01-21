@@ -6,4 +6,3 @@ edition = "2021"
 [dependencies]
 macroquad = "0.4"
 tiled = "0.13"
-bit-set = "0.8"

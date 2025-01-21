@@ -1,11 +1,58 @@
 use macroquad::math::Vec2;
 
-#[derive(PartialEq)]
+use crate::world::{TileObjectIndex, TileObjectKind, World, WorldEvent};
+
+#[derive(PartialEq, Clone)]
 pub enum Item {
     // Tools
-    Hoe,
-    Axe,
+    Tool(ItemTool),
     // Materials
+    Resource(ItemResource),
+}
+
+impl Item {
+    pub fn on_use(&self, target: TileObjectIndex, world: &mut World) -> Vec<WorldEvent> {
+        match self {
+            Item::Tool(tool) => tool.on_use(target, world),
+            _ => vec![],
+        }
+    }
+}
+
+#[derive(PartialEq, Clone)]
+pub enum ItemTool {
+    Hoe,
+    Axe(Axe),
+}
+impl ItemTool {
+    fn on_use(&self, target: TileObjectIndex, world: &mut World) -> Vec<WorldEvent> {
+        match self {
+            ItemTool::Axe(axe) => axe.on_use(target, world),
+            _ => vec![],
+        }
+    }
+}
+
+#[derive(PartialEq, Clone)]
+pub struct Axe {}
+impl Axe {
+    fn on_use(&self, target: TileObjectIndex, world: &mut World) -> Vec<WorldEvent> {
+        let Some(tile_object) = world.get_mut_tile_object_from_index(target) else {
+            return vec![];
+        };
+
+        match tile_object.kind {
+            TileObjectKind::Tree(_) => vec![WorldEvent::TileObjectDamage {
+                tile_object: target,
+                damage: 1,
+            }],
+            _ => vec![],
+        }
+    }
+}
+
+#[derive(PartialEq, Clone)]
+pub enum ItemResource {
     Wood,
 }
 

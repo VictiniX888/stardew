@@ -2,6 +2,7 @@ use game::GameState;
 use input::handle_input;
 use macroquad::prelude::*;
 use render::RenderState;
+use world::process_events;
 
 mod game;
 mod grid;
@@ -13,19 +14,26 @@ mod world;
 
 #[macroquad::main("Stardew Valley")]
 async fn main() {
+    // Seed random
+    rand::srand(macroquad::miniquad::date::now() as _);
+
+    // Init
     let mut game_state = GameState::init();
     let mut renderer = RenderState::init();
     map::load_map(map::MapType::Farm, &mut game_state, &mut renderer).await;
     renderer.load_player_texture().await;
     renderer.load_tile_object_textures().await;
+    renderer.load_item_textures().await;
     build_textures_atlas();
 
     loop {
         // Input
         handle_input(&mut game_state, &mut renderer);
 
-        clear_background(RED);
+        // Process events
+        process_events(&mut game_state);
 
+        clear_background(RED);
         // Draw map
         renderer.render_world(&game_state);
 

@@ -1,11 +1,20 @@
+use std::collections::VecDeque;
+
 use macroquad::prelude::*;
 
-use crate::map::{MapWorldData, TileObject};
+use crate::{
+    item::{Axe, Item, ItemTool},
+    map::MapWorldData,
+    world::{World, WorldEvent},
+};
 
 pub struct GameState {
     pub map_data: Option<MapWorldData>,
 
     pub player_pos: Vec2,
+
+    pub world: Option<World>,
+    pub event_queue: VecDeque<WorldEvent>,
 }
 
 impl GameState {
@@ -13,29 +22,24 @@ impl GameState {
         GameState {
             map_data: None,
             player_pos: vec2(0.0, 0.0),
+            world: None,
+            event_queue: VecDeque::new(),
         }
     }
 
     pub fn on_action(&mut self) {
         // TODO: check player equipped item
         // Currently assumes it is a hoe
-        if self.map_data.is_none() {
+        if self.world.is_none() || self.map_data.is_none() {
             return;
         }
 
         let x = self.player_pos.x.round() as usize;
         let y = self.player_pos.y.round() as usize;
 
-        let tile_objects = &mut self.map_data.as_mut().unwrap().objects;
-        let tile_object = tile_objects.get_mut(y, x);
-
-        tile_object.to_owned().on_axe(self);
-
-        let tiles = &mut self.map_data.as_mut().unwrap().tiles;
-        let tile = tiles.get_mut(y, x);
-
-        // tile.on_hoe();
+        self.event_queue.push_back(WorldEvent::ItemUse {
+            item: Item::Tool(ItemTool::Axe(Axe {})),
+            target: self.world.as_ref().unwrap().get_tile_object_index(y, x),
+        });
     }
-
-    pub fn on_axe(&mut self, tile_object: &mut TileObject) {}
 }

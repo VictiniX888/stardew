@@ -5,8 +5,8 @@ use macroquad::prelude::*;
 use crate::{
     game::GameState,
     grid::Grid,
-    item::{Item, ItemStack, WorldItem},
     render::RenderState,
+    world::{TreeFullyGrown, World},
 };
 
 pub enum MapType {
@@ -25,12 +25,10 @@ pub type TextureMap = HashMap<String, HashMap<u32, Texture2D>>;
 
 pub struct MapWorldData {
     pub tiles: Grid<Tile>,
-    pub objects: Grid<TileObject>,
-    pub world_items: BinaryHeap<WorldItem>,
 }
 
 impl MapWorldData {
-    fn load(tiled_map: tiled::Map) -> MapWorldData {
+    fn load(tiled_map: &tiled::Map) -> MapWorldData {
         let mut grid = Grid::new(tiled_map.height as usize, tiled_map.width as usize);
         for layer in tiled_map.layers() {
             if let Some(layer) = layer.as_tile_layer() {
@@ -53,12 +51,28 @@ impl MapWorldData {
             }
         }
 
-        let grid_objects = Grid::new(tiled_map.height as usize, tiled_map.width as usize);
+        MapWorldData { tiles: grid }
+    }
 
-        MapWorldData {
-            tiles: grid,
-            objects: grid_objects,
-            world_items: BinaryHeap::new(),
+    fn load_world(tiled_map: &tiled::Map) -> World {
+        let width = tiled_map.width as usize;
+        let height = tiled_map.height as usize;
+        let mut tile_objects = Grid::new(height, width);
+
+        // Randomly generate trees
+        for row in 0..height {
+            for col in 0..width {
+                if rand::gen_range(0, 100) == 0 {
+                    tile_objects.set(row, col, Some(TreeFullyGrown::new()));
+                }
+            }
+        }
+
+        let world_items = BinaryHeap::new();
+
+        World {
+            tile_objects,
+            world_items,
         }
     }
 }
@@ -78,10 +92,12 @@ pub async fn load_map(map: MapType, game_state: &mut GameState, render_state: &m
     let tiled_map = load_tiled_map_from_path(map.get_tiled_path());
 
     let render_data = MapRenderData::load(&tiled_map).await;
-    let world_data = MapWorldData::load(tiled_map);
+    let map_world_data = MapWorldData::load(&tiled_map);
+    let world_data = MapWorldData::load_world(&tiled_map);
 
-    game_state.map_data = Some(world_data);
+    game_state.map_data = Some(map_world_data);
     game_state.player_pos = vec2(0.0, 0.0);
+    game_state.world = Some(world_data);
 
     render_state.map_data = Some(render_data);
 }
@@ -112,9 +128,9 @@ async fn init_tiles_for_render(map: &tiled::Map) -> TextureMap {
 #[derive(Default, Clone)]
 pub enum Tile {
     #[default]
-    EMPTY,
-    GRASS,
-    DIRT {
+    Empty,
+    Grass,
+    Dirt {
         is_tilled: bool,
     },
 }
@@ -132,7 +148,7 @@ impl Tile {
     // Actions
     pub fn on_hoe(&mut self) {
         match self {
-            Tile::DIRT { is_tilled } => *is_tilled = true,
+            Tile::Dirt { is_tilled } => *is_tilled = true,
             _ => (),
         }
     }
@@ -140,47 +156,8 @@ impl Tile {
 
 fn get_tile_from_id(tile_id: &str) -> Option<Tile> {
     Some(match tile_id {
-        "farm_grass" => Tile::GRASS,
-        "farm_dirt" => Tile::DIRT { is_tilled: false },
+        "farm_grass" => Tile::Grass,
+        "farm_dirt" => Tile::Dirt { is_tilled: false },
         _ => return None,
     })
-}
-
-#[derive(Default, Clone)]
-pub enum TileObject {
-    #[default]
-    EMPTY,
-    TREE {
-        hp: u32,
-    },
-}
-
-impl TileObject {
-    pub fn get_drops(&self) -> Vec<ItemStack> {
-        match self {
-            TileObject::TREE { .. } => vec![ItemStack {
-                item: Item::Wood,
-                count: 5,
-            }],
-            _ => vec![],
-        }
-    }
-
-    // Actions
-    pub fn on_axe(mut self, game_state: &mut GameState) {
-        match self {
-            TileObject::TREE { mut hp } => {
-                if hp > 0 {
-                    hp -= 1
-                } else {
-                    self.on_destroy(game_state);
-                }
-            }
-            _ => (),
-        }
-    }
-
-    pub fn on_destroy(&mut self, game_state: &mut GameState) {
-        *self = TileObject::EMPTY;
-    }
 }

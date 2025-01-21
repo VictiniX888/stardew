@@ -1,7 +1,7 @@
 pub struct Grid<T> {
     arr: Vec<T>,
-    rows: usize,
-    cols: usize,
+    pub rows: usize,
+    pub cols: usize,
 }
 
 impl<T: Default + Clone> Grid<T> {
@@ -22,6 +22,22 @@ impl<T> Grid<T> {
 
     pub fn get_mut(&mut self, row: usize, col: usize) -> &mut T {
         &mut self.arr[row * self.cols + col]
+    }
+
+    pub fn set_by_index(&mut self, index: usize, value: T) {
+        self.arr[index] = value;
+    }
+
+    pub fn replace_by_index(&mut self, index: usize, value: T) -> T {
+        std::mem::replace(&mut self.arr[index], value)
+    }
+
+    pub fn get_by_index(&self, index: usize) -> &T {
+        &self.arr[index]
+    }
+
+    pub fn get_mut_by_index(&mut self, index: usize) -> &mut T {
+        &mut self.arr[index]
     }
 
     pub fn enumerate_iter(&self) -> EnumerateIter<T> {
