@@ -1,4 +1,4 @@
-use std::collections::{BinaryHeap, VecDeque};
+use std::collections::VecDeque;
 
 use macroquad::prelude::*;
 
@@ -10,7 +10,7 @@ use crate::{
 
 pub struct World {
     pub tile_objects: Grid<Option<TileObject>>,
-    pub world_items: BinaryHeap<WorldItem>,
+    pub world_items: Vec<WorldItem>,
 }
 
 impl World {
@@ -56,7 +56,15 @@ impl World {
                 },
             })
         });
-        self.world_items.extend(items);
+
+        // Insert into sorted vec
+        // Taken from https://doc.rust-lang.org/stable/std/primitive.slice.html#method.partition_point
+        for item in items {
+            let idx = self
+                .world_items
+                .partition_point(|other| other.pos.y <= item.pos.y);
+            self.world_items.insert(idx, item);
+        }
     }
 }
 

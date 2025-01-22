@@ -1,6 +1,7 @@
+use macroquad::prelude::*;
+
 use game::GameState;
 use input::handle_input;
-use macroquad::prelude::*;
 use render::RenderState;
 use world::process_events;
 
@@ -33,7 +34,7 @@ async fn main() {
         // Process events
         process_events(&mut game_state);
 
-        clear_background(RED);
+        clear_background(BLACK);
         // Draw map
         renderer.render_world(&game_state);
 

@@ -68,7 +68,7 @@ impl MapWorldData {
             }
         }
 
-        let world_items = BinaryHeap::new();
+        let world_items = Vec::new();
 
         World {
             tile_objects,
