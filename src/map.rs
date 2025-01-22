@@ -1,12 +1,9 @@
-use std::collections::{BinaryHeap, HashMap};
+use std::collections::HashMap;
 
 use macroquad::prelude::*;
 
 use crate::{
-    game::GameState,
-    grid::Grid,
-    render::RenderState,
-    world::{TreeFullyGrown, World},
+    game::GameState, grid::Grid, render::RenderState, tile_object::TreeFullyGrown, world::World,
 };
 
 pub enum MapType {

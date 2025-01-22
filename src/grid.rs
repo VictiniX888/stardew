@@ -1,5 +1,3 @@
-use std::path::Iter;
-
 pub struct Grid<T> {
     arr: Vec<T>,
     pub rows: usize,

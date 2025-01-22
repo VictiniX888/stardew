@@ -1,6 +1,10 @@
 use macroquad::math::Vec2;
 
-use crate::world::{TileObjectIndex, TileObjectKind, World, WorldEvent};
+use crate::{
+    event::WorldEvent,
+    tile_object::{TileObjectIndex, TileObjectKind},
+    world::World,
+};
 
 #[derive(PartialEq, Clone)]
 pub enum Item {

@@ -3,9 +3,10 @@ use std::collections::VecDeque;
 use macroquad::prelude::*;
 
 use crate::{
+    event::WorldEvent,
     item::{Axe, Item, ItemTool},
     map::MapWorldData,
-    world::{World, WorldEvent},
+    world::World,
 };
 
 pub struct GameState {

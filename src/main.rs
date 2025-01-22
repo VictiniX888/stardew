@@ -1,16 +1,18 @@
+use event::process_events;
 use macroquad::prelude::*;
 
 use game::GameState;
 use input::handle_input;
 use render::RenderState;
-use world::process_events;
 
+mod event;
 mod game;
 mod grid;
 mod input;
 mod item;
 mod map;
 mod render;
+mod tile_object;
 mod world;
 
 #[macroquad::main("Stardew Valley")]

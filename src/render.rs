@@ -6,7 +6,7 @@ use crate::{
     game::GameState,
     item::{Item, ItemResource, WorldItem},
     map::{MapRenderData, TextureMap, Tile},
-    world::{TileObject, TileObjectKind, TileObjectTreeKind},
+    tile_object::{TileObject, TileObjectKind, TileObjectTreeKind},
 };
 
 pub struct RenderState {
@@ -82,7 +82,7 @@ impl RenderState {
             if let Some(pos) = next_player_character {
                 if min_y.is_none() || pos.y < min_y.unwrap() {
                     render_object = Some(RenderObject::PlayerCharacter);
-                    min_y = Some(pos.y);
+                    // min_y = Some(pos.y);
                 }
             }
 
@@ -161,7 +161,7 @@ impl RenderState {
         );
     }
 
-    fn render_player_character(&self, tile_w: f32, game_state: &GameState) {
+    fn render_player_character(&self, tile_w: f32, _game_state: &GameState) {
         // Draw player
         if let Some(player_texture) = &self.player_texture {
             draw_texture_ex(
@@ -251,8 +251,6 @@ fn get_tile_object_texture<'a>(
             }
             TileObjectTreeKind::TreeStump(_) => texturemap.get("objects").unwrap().get(&1).unwrap(),
         },
-
-        _ => return None,
     })
 }
 
@@ -261,6 +259,6 @@ fn get_item_texture<'a>(item: &Item, texturemap: &'a TextureMap) -> Option<&'a T
         Item::Resource(item) => match item {
             ItemResource::Wood => texturemap.get("items").unwrap().get(&0).unwrap(),
         },
-        _ => return None,
+        _ => panic!("No valid texture for item"),
     })
 }
