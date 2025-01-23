@@ -6,7 +6,7 @@ use crate::{
     world::World,
 };
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Copy)]
 pub enum Item {
     // Tools
     Tool(ItemTool),
@@ -23,7 +23,7 @@ impl Item {
     }
 }
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Copy)]
 pub enum ItemTool {
     Hoe,
     Axe(Axe),
@@ -37,7 +37,7 @@ impl ItemTool {
     }
 }
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Copy)]
 pub struct Axe {}
 impl Axe {
     fn on_use(&self, target: TileObjectIndex, world: &mut World) -> Vec<WorldEvent> {
@@ -55,7 +55,7 @@ impl Axe {
     }
 }
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Copy)]
 pub enum ItemResource {
     Wood,
 }
@@ -64,6 +64,8 @@ pub struct ItemStack {
     pub item: Item,
     pub count: u32,
 }
+
+pub struct WorldItemIndex(pub usize);
 
 #[derive(PartialEq)]
 pub struct WorldItem {

@@ -2,7 +2,7 @@ use macroquad::prelude::*;
 
 use crate::{
     grid::Grid,
-    item::{ItemStack, WorldItem},
+    item::{ItemStack, WorldItem, WorldItemIndex},
     tile_object::{TileObject, TileObjectIndex},
 };
 
@@ -63,5 +63,13 @@ impl World {
                 .partition_point(|other| other.pos.y <= item.pos.y);
             self.world_items.insert(idx, item);
         }
+    }
+
+    pub fn get_world_item(&self, index: WorldItemIndex) -> &WorldItem {
+        &self.world_items[index.0]
+    }
+
+    pub fn remove_world_item(&mut self, index: WorldItemIndex) -> WorldItem {
+        self.world_items.remove(index.0)
     }
 }

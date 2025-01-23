@@ -4,6 +4,7 @@ use macroquad::prelude::*;
 use game::GameState;
 use input::handle_input;
 use render::RenderState;
+use system::pickup_world_items;
 
 mod event;
 mod game;
@@ -11,7 +12,9 @@ mod grid;
 mod input;
 mod item;
 mod map;
+mod player;
 mod render;
+mod system;
 mod tile_object;
 mod world;
 
@@ -32,6 +35,9 @@ async fn main() {
     loop {
         // Input
         handle_input(&mut game_state, &mut renderer);
+
+        // Systems
+        pickup_world_items(&mut game_state);
 
         // Process events
         process_events(&mut game_state);

@@ -7,16 +7,16 @@ const PLAYER_SPEED: f32 = 0.05;
 pub fn handle_input(game_state: &mut GameState, render_state: &mut RenderState) {
     // Player movement
     if is_key_down(KeyCode::Right) {
-        game_state.player_pos.x += PLAYER_SPEED;
+        game_state.player.pos.x += PLAYER_SPEED;
     }
     if is_key_down(KeyCode::Left) {
-        game_state.player_pos.x -= PLAYER_SPEED;
+        game_state.player.pos.x -= PLAYER_SPEED;
     }
     if is_key_down(KeyCode::Down) {
-        game_state.player_pos.y += PLAYER_SPEED;
+        game_state.player.pos.y += PLAYER_SPEED;
     }
     if is_key_down(KeyCode::Up) {
-        game_state.player_pos.y -= PLAYER_SPEED;
+        game_state.player.pos.y -= PLAYER_SPEED;
     }
 
     // Camera zoom

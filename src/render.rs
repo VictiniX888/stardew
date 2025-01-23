@@ -40,9 +40,9 @@ impl RenderState {
             let tex = get_tile_texture(tile, &map_render_data.texturemap);
             draw_texture_ex(
                 tex,
-                (col as f32 - game_state.player_pos.x) * tile_w + screen_width() / 2.0
+                (col as f32 - game_state.player.pos.x) * tile_w + screen_width() / 2.0
                     - tile_w / 2.0,
-                (row as f32 - game_state.player_pos.y) * tile_w + screen_height() / 2.0
+                (row as f32 - game_state.player.pos.y) * tile_w + screen_height() / 2.0
                     - tile_w / 2.0,
                 WHITE,
                 DrawTextureParams {
@@ -57,7 +57,7 @@ impl RenderState {
         let mut iter_world_items = world.world_items.iter();
         let mut next_tile_object: Option<((usize, usize), &TileObject)> = iter_tile_objects.next();
         let mut next_world_item: Option<&WorldItem> = iter_world_items.next();
-        let mut next_player_character = Some(game_state.player_pos);
+        let mut next_player_character = Some(game_state.player.pos);
 
         while next_tile_object.is_some()
             || next_world_item.is_some()
@@ -132,8 +132,8 @@ impl RenderState {
         let tex_h = tex.height() * self.zoom as f32;
         draw_texture_ex(
             tex,
-            (col as f32 - game_state.player_pos.x) * tile_w + screen_width() / 2.0 - tile_w / 2.0,
-            (row as f32 - game_state.player_pos.y) * tile_w + screen_height() / 2.0 + tile_w / 2.0
+            (col as f32 - game_state.player.pos.x) * tile_w + screen_width() / 2.0 - tile_w / 2.0,
+            (row as f32 - game_state.player.pos.y) * tile_w + screen_height() / 2.0 + tile_w / 2.0
                 - tex_h,
             WHITE,
             DrawTextureParams {
@@ -151,8 +151,8 @@ impl RenderState {
         let item_w = tile_w * 0.8;
         draw_texture_ex(
             tex,
-            (item.pos.x - game_state.player_pos.x) * tile_w + screen_width() / 2.0 - item_w / 2.0,
-            (item.pos.y - game_state.player_pos.y) * tile_w + screen_height() / 2.0 - item_w / 2.0,
+            (item.pos.x - game_state.player.pos.x) * tile_w + screen_width() / 2.0 - item_w / 2.0,
+            (item.pos.y - game_state.player.pos.y) * tile_w + screen_height() / 2.0 - item_w / 2.0,
             WHITE,
             DrawTextureParams {
                 dest_size: Some(vec2(item_w as f32, item_w as f32)),

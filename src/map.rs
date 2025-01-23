@@ -93,7 +93,7 @@ pub async fn load_map(map: MapType, game_state: &mut GameState, render_state: &m
     let world_data = MapWorldData::load_world(&tiled_map);
 
     game_state.map_data = Some(map_world_data);
-    game_state.player_pos = vec2(0.0, 0.0);
+    game_state.player.pos = vec2(0.0, 0.0);
     game_state.world = Some(world_data);
 
     render_state.map_data = Some(render_data);

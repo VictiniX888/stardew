@@ -6,13 +6,14 @@ use crate::{
     event::WorldEvent,
     item::{Axe, Item, ItemTool},
     map::MapWorldData,
+    player::Player,
     world::World,
 };
 
 pub struct GameState {
     pub map_data: Option<MapWorldData>,
 
-    pub player_pos: Vec2,
+    pub player: Player,
 
     pub world: Option<World>,
     pub event_queue: VecDeque<WorldEvent>,
@@ -22,7 +23,7 @@ impl GameState {
     pub fn init() -> GameState {
         GameState {
             map_data: None,
-            player_pos: vec2(0.0, 0.0),
+            player: Player::new(),
             world: None,
             event_queue: VecDeque::new(),
         }
@@ -35,8 +36,8 @@ impl GameState {
             return;
         }
 
-        let x = self.player_pos.x.round() as usize;
-        let y = self.player_pos.y.round() as usize;
+        let x = self.player.pos.x.round() as usize;
+        let y = self.player.pos.y.round() as usize;
 
         self.event_queue.push_back(WorldEvent::ItemUse {
             item: Item::Tool(ItemTool::Axe(Axe {})),
