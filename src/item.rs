@@ -60,6 +60,7 @@ pub enum ItemResource {
     Wood,
 }
 
+#[derive(Clone)]
 pub struct ItemStack {
     pub item: Item,
     pub count: u32,

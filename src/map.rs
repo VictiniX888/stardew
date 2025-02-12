@@ -79,6 +79,12 @@ pub struct MapRenderData {
 }
 
 impl MapRenderData {
+    pub fn new() -> MapRenderData {
+        MapRenderData {
+            texturemap: HashMap::new(),
+        }
+    }
+
     async fn load(tiled_map: &tiled::Map) -> MapRenderData {
         let texturemap = init_tiles_for_render(tiled_map).await;
         MapRenderData { texturemap }
@@ -96,7 +102,7 @@ pub async fn load_map(map: MapType, game_state: &mut GameState, render_state: &m
     game_state.player.pos = vec2(0.0, 0.0);
     game_state.world = Some(world_data);
 
-    render_state.map_data = Some(render_data);
+    render_state.map_data = render_data;
 }
 
 fn load_tiled_map_from_path(path: &str) -> tiled::Map {

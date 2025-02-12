@@ -45,6 +45,7 @@ async fn main() {
         clear_background(BLACK);
         // Draw map
         renderer.render_world(&game_state);
+        renderer.render_hotbar(&game_state);
 
         // Show FPS
         draw_text(&get_fps().to_string(), 20.0, 20.0, 30.0, DARKGRAY);

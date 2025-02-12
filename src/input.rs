@@ -34,4 +34,7 @@ pub fn handle_input(game_state: &mut GameState, render_state: &mut RenderState) 
     if is_mouse_button_pressed(MouseButton::Left) {
         game_state.on_action();
     }
+    if is_key_pressed(KeyCode::Space) {
+        game_state.on_action();
+    }
 }

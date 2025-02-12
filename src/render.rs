@@ -5,31 +5,30 @@ use macroquad::prelude::*;
 use crate::{
     game::GameState,
     item::{Item, ItemResource, WorldItem},
-    map::{MapRenderData, TextureMap, Tile},
+    map::{MapRenderData, Tile},
     tile_object::{TileObject, TileObjectKind, TileObjectTreeKind},
 };
 
 pub struct RenderState {
-    pub map_data: Option<MapRenderData>,
+    pub map_data: MapRenderData,
     pub player_texture: Option<Texture2D>,
 
-    pub zoom: i32,
+    pub zoom: u32,
 }
 
 impl RenderState {
     pub fn init() -> RenderState {
         RenderState {
-            map_data: None,
+            map_data: MapRenderData::new(),
             player_texture: None,
             zoom: 1,
         }
     }
 
     pub fn render_world(&self, game_state: &GameState) {
-        if self.map_data.is_none() || game_state.map_data.is_none() || game_state.world.is_none() {
+        if game_state.map_data.is_none() || game_state.world.is_none() {
             panic!("No world to render");
         }
-        let map_render_data = self.map_data.as_ref().unwrap();
         let map_world_data = game_state.map_data.as_ref().unwrap();
         let world = game_state.world.as_ref().unwrap();
 
@@ -37,7 +36,7 @@ impl RenderState {
 
         // Draw map
         for ((row, col), tile) in map_world_data.tiles.enumerate_iter() {
-            let tex = get_tile_texture(tile, &map_render_data.texturemap);
+            let tex = self.get_tile_texture(tile);
             draw_texture_ex(
                 tex,
                 (col as f32 - game_state.player.pos.x) * tile_w + screen_width() / 2.0
@@ -123,11 +122,7 @@ impl RenderState {
         tile_w: f32,
         game_state: &GameState,
     ) {
-        let Some(tex) =
-            get_tile_object_texture(tile_object, &self.map_data.as_ref().unwrap().texturemap)
-        else {
-            return;
-        };
+        let tex = self.get_tile_object_texture(tile_object);
         let tex_w = tex.width() * self.zoom as f32;
         let tex_h = tex.height() * self.zoom as f32;
         draw_texture_ex(
@@ -144,10 +139,7 @@ impl RenderState {
     }
 
     fn render_world_item(&self, item: &WorldItem, tile_w: f32, game_state: &GameState) {
-        let Some(tex) = get_item_texture(&item.item, &self.map_data.as_ref().unwrap().texturemap)
-        else {
-            return;
-        };
+        let tex = self.get_item_texture(&item.item);
         let item_w = tile_w * 0.8;
         draw_texture_ex(
             tex,
@@ -177,6 +169,55 @@ impl RenderState {
         }
     }
 
+    pub fn render_hotbar(&self, game_state: &GameState) {
+        const HOTBAR_SLOTS: u32 = 10;
+        const SLOT_WIDTH: f32 = 32.0;
+        const HOTBAR_BORDER: f32 = 4.0;
+        const HOTBAR_WIDTH: f32 =
+            (SLOT_WIDTH + HOTBAR_BORDER) * HOTBAR_SLOTS as f32 + HOTBAR_BORDER;
+        const HOTBAR_HEIGHT: f32 = SLOT_WIDTH + HOTBAR_BORDER * 2.0;
+
+        // Draw hotbar outline
+        let screen_width = screen_width();
+        let screen_height = screen_height();
+        let left = (screen_width - HOTBAR_WIDTH) / 2.0;
+        let top = screen_height - HOTBAR_HEIGHT;
+        draw_rectangle(left, top, HOTBAR_WIDTH, HOTBAR_HEIGHT, DARKGRAY);
+        draw_rectangle_lines(left, top, HOTBAR_WIDTH, HOTBAR_HEIGHT, HOTBAR_BORDER, WHITE);
+        for slot in 1..HOTBAR_SLOTS {
+            // Draw internal borders
+            let x = left + (SLOT_WIDTH + HOTBAR_BORDER) * slot as f32 + HOTBAR_BORDER / 2.0;
+            draw_line(x, top, x, screen_height, HOTBAR_BORDER / 2.0, WHITE);
+        }
+
+        // Render items
+        for (slot, itemstack) in game_state.player.inventory.iter().enumerate() {
+            let slot_left = left + (SLOT_WIDTH + HOTBAR_BORDER) * slot as f32 + HOTBAR_BORDER;
+            let slot_right =
+                left + (SLOT_WIDTH + HOTBAR_BORDER) * (slot + 1) as f32 - HOTBAR_BORDER / 2.0;
+            let slot_top = top + HOTBAR_BORDER;
+            let slot_bottom = top + SLOT_WIDTH + HOTBAR_BORDER;
+            draw_texture_ex(
+                self.get_item_texture(&itemstack.item),
+                slot_left,
+                slot_top,
+                WHITE,
+                DrawTextureParams {
+                    dest_size: Some(vec2(SLOT_WIDTH, SLOT_WIDTH)),
+                    ..Default::default()
+                },
+            );
+            let text_dim = measure_text(&itemstack.count.to_string(), None, 15, 1.0);
+            draw_text(
+                &itemstack.count.to_string(),
+                slot_right - text_dim.width,
+                slot_bottom - text_dim.height + text_dim.offset_y,
+                15.0,
+                WHITE,
+            );
+        }
+    }
+
     pub async fn load_player_texture(&mut self) {
         let tex = load_texture("tiled/characters/character_cat.png")
             .await
@@ -186,8 +227,6 @@ impl RenderState {
     }
 
     pub async fn load_tile_object_textures(&mut self) {
-        assert!(self.map_data.is_some());
-
         let mut obj_texs = HashMap::new();
 
         let tex = load_texture("tiled/tile_objects/tree_fully_grown.png")
@@ -203,25 +242,82 @@ impl RenderState {
         obj_texs.insert(1, tex);
 
         self.map_data
-            .as_mut()
-            .unwrap()
             .texturemap
             .insert("objects".to_string(), obj_texs);
     }
 
     pub async fn load_item_textures(&mut self) {
-        assert!(self.map_data.is_some());
-
         let mut item_texs = HashMap::new();
         let tex = load_texture("tiled/items/item_wood.png").await.unwrap();
         tex.set_filter(FilterMode::Nearest);
         item_texs.insert(0, tex);
 
         self.map_data
-            .as_mut()
-            .unwrap()
             .texturemap
             .insert("items".to_string(), item_texs);
+    }
+
+    fn get_tile_texture(&self, tile: &Tile) -> &Texture2D {
+        match tile {
+            Tile::Grass => self
+                .map_data
+                .texturemap
+                .get("farm")
+                .unwrap()
+                .get(&0)
+                .unwrap(),
+            Tile::Dirt { is_tilled: false } => self
+                .map_data
+                .texturemap
+                .get("farm")
+                .unwrap()
+                .get(&1)
+                .unwrap(),
+            Tile::Dirt { is_tilled: true } => self
+                .map_data
+                .texturemap
+                .get("farm")
+                .unwrap()
+                .get(&2)
+                .unwrap(),
+            _ => panic!("No valid texture for tile"),
+        }
+    }
+
+    fn get_tile_object_texture(&self, tile_object: &TileObject) -> &Texture2D {
+        match &tile_object.kind {
+            TileObjectKind::Tree(tree) => match tree.kind {
+                TileObjectTreeKind::TreeFullyGrown(_) => self
+                    .map_data
+                    .texturemap
+                    .get("objects")
+                    .unwrap()
+                    .get(&0)
+                    .unwrap(),
+                TileObjectTreeKind::TreeStump(_) => self
+                    .map_data
+                    .texturemap
+                    .get("objects")
+                    .unwrap()
+                    .get(&1)
+                    .unwrap(),
+            },
+        }
+    }
+
+    fn get_item_texture(&self, item: &Item) -> &Texture2D {
+        match item {
+            Item::Resource(item) => match item {
+                ItemResource::Wood => self
+                    .map_data
+                    .texturemap
+                    .get("items")
+                    .unwrap()
+                    .get(&0)
+                    .unwrap(),
+            },
+            _ => panic!("No valid texture for item"),
+        }
     }
 }
 
@@ -229,36 +325,4 @@ enum RenderObject {
     TileObject,
     WorldItem,
     PlayerCharacter,
-}
-
-fn get_tile_texture<'a>(tile: &Tile, texturemap: &'a TextureMap) -> &'a Texture2D {
-    match tile {
-        Tile::Grass => texturemap.get("farm").unwrap().get(&0).unwrap(),
-        Tile::Dirt { is_tilled: false } => texturemap.get("farm").unwrap().get(&1).unwrap(),
-        Tile::Dirt { is_tilled: true } => texturemap.get("farm").unwrap().get(&2).unwrap(),
-        _ => panic!("No valid texture for tile"),
-    }
-}
-
-fn get_tile_object_texture<'a>(
-    tile_object: &TileObject,
-    texturemap: &'a TextureMap,
-) -> Option<&'a Texture2D> {
-    Some(match &tile_object.kind {
-        TileObjectKind::Tree(tree) => match tree.kind {
-            TileObjectTreeKind::TreeFullyGrown(_) => {
-                texturemap.get("objects").unwrap().get(&0).unwrap()
-            }
-            TileObjectTreeKind::TreeStump(_) => texturemap.get("objects").unwrap().get(&1).unwrap(),
-        },
-    })
-}
-
-fn get_item_texture<'a>(item: &Item, texturemap: &'a TextureMap) -> Option<&'a Texture2D> {
-    Some(match item {
-        Item::Resource(item) => match item {
-            ItemResource::Wood => texturemap.get("items").unwrap().get(&0).unwrap(),
-        },
-        _ => panic!("No valid texture for item"),
-    })
 }

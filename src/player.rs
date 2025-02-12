@@ -1,13 +1,13 @@
 use macroquad::math::{vec2, Vec2};
 
 use crate::{
-    item::{ItemStack, WorldItemIndex},
+    item::{Item, ItemResource, ItemStack, WorldItemIndex},
     world::World,
 };
 
 pub struct Player {
     pub pos: Vec2,
-    inventory: Inventory,
+    pub inventory: Inventory,
 }
 
 impl Player {
@@ -41,5 +41,9 @@ impl Inventory {
             Some(it) => it.count += items.count,
             None => self.items.push(items),
         }
+    }
+
+    pub fn iter(&self) -> std::slice::Iter<'_, ItemStack> {
+        self.items.iter()
     }
 }
